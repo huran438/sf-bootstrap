@@ -1,0 +1,14 @@
+﻿{
+  "author": "Secret Place Studio",
+  "name": "sp.sframework.bootstrap",
+  "displayName": "SF Bootstrap",
+  "version": "0.1.0",
+  "description": "",
+  "keywords": [
+    "bootstrap",
+    "sframework",
+    "di"
+  ],
+  "category": "SFramework",
+  "type": "library"
+}
