@@ -9,6 +9,9 @@ namespace SFramework.Bootstrap.Runtime
 {
     public abstract class SFBootstrap : MonoBehaviour
     {
+        protected IProgress<float> Progress { get; } = new Progress<float>();
+        protected event Action<float> ProgressUpdate = progress => { }; 
+
         [SerializeField] private SFBootstrapStep[] _initializationSteps = Array.Empty<SFBootstrapStep>();
 
         private CancellationTokenSource _cancellationTokenSource;
@@ -28,7 +31,9 @@ namespace SFramework.Bootstrap.Runtime
                 await initializationStep.Data.Run(_cancellationTokenSource.Token);
                 stopwatch.Stop();
                 var elapsedTime = stopwatch.ElapsedMilliseconds;
-
+                var progress = Mathf.InverseLerp(0, _initializationSteps.Length, index);
+                Progress.Report(progress);
+                ProgressUpdate.Invoke(progress);
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogFormat("Bootstrap - {0:D8} - {1}", elapsedTime, initializationStep.Name);
@@ -40,12 +45,14 @@ namespace SFramework.Bootstrap.Runtime
 
         protected abstract UniTask PreInit(CancellationToken cancellationToken);
         protected abstract UniTask Init(CancellationToken cancellationToken);
+        protected abstract void Dispose();
 
         protected virtual void OnDestroy()
         {
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource.Dispose();
             _cancellationTokenSource = null;
+            Dispose();
         }
     }
 }
