@@ -9,10 +9,11 @@ namespace SFramework.Bootstrap.Runtime
 {
     public abstract class SFBootstrap : MonoBehaviour
     {
-        protected IProgress<float> Progress { get; } = new Progress<float>();
-        protected event Action<float> ProgressUpdate = progress => { }; 
+        protected event Action<float, long> Progress = (_, _) => { };
+        protected event Action<float, string> StepProgress = (_, _) => { };
 
-        [SerializeField] private SFBootstrapStep[] _initializationSteps = Array.Empty<SFBootstrapStep>();
+        [SerializeField]
+        private SFBootstrapStep[] _initializationSteps = Array.Empty<SFBootstrapStep>();
 
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -28,12 +29,11 @@ namespace SFramework.Bootstrap.Runtime
                 if (!initializationStep.Enabled) continue;
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
-                await initializationStep.Data.Run(_cancellationTokenSource.Token);
+                await initializationStep.Data.Run(StepProgress, _cancellationTokenSource.Token);
                 stopwatch.Stop();
                 var elapsedTime = stopwatch.ElapsedMilliseconds;
                 var progress = Mathf.InverseLerp(0, _initializationSteps.Length, index);
-                Progress.Report(progress);
-                ProgressUpdate.Invoke(progress);
+                Progress.Invoke(progress, elapsedTime);
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogFormat("Bootstrap - {0:D8} - {1}", elapsedTime, initializationStep.Name);

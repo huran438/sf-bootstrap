@@ -7,6 +7,6 @@ namespace SFramework.Bootstrap.Runtime
 {
     public abstract class SFBootstrapStepData : ScriptableObject
     {
-        public abstract UniTask Run(CancellationToken cancellationToken);
+        public abstract UniTask Run(Action<float, string> stepProgress,CancellationToken cancellationToken);
     }
 }
