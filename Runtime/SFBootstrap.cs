@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using SFramework.Core.Runtime;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 namespace SFramework.Bootstrap.Runtime
 {
@@ -34,9 +34,9 @@ namespace SFramework.Bootstrap.Runtime
                 var elapsedTime = stopwatch.ElapsedMilliseconds;
                 var progress = Mathf.InverseLerp(0, _initializationSteps.Length, index);
                 Progress.Invoke(progress, elapsedTime);
-                if (Debug.isDebugBuild)
+                if (SFDebug.IsDebug)
                 {
-                    Debug.LogFormat("Bootstrap - {0:D8} - {1}", elapsedTime, initializationStep.Name);
+                    SFDebug.Log("Bootstrap - {0:D8} - {1}", elapsedTime, initializationStep.Name);
                 }
             }
 

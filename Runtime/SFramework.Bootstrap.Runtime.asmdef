@@ -2,7 +2,8 @@
     "name": "SFramework.Bootstrap.Runtime",
     "rootNamespace": "SFramework.Bootstrap.Runtime",
     "references": [
-        "UniTask"
+        "UniTask",
+        "SFramework.Core.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
