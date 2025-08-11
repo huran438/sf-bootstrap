@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace SFramework.Bootstrap.Runtime
 {
@@ -12,39 +13,70 @@ namespace SFramework.Bootstrap.Runtime
         protected event Action<float, string> StepProgress = (_, _) => { };
 
         [SerializeField]
-        private SFBootstrapStep[] _initializationSteps = Array.Empty<SFBootstrapStep>();
+        private SFBootstrapConfigData _defaultConfig;
 
+        [SerializeField]
+        private SFBootstrapConfig[] _configs = Array.Empty<SFBootstrapConfig>();
+        
         private CancellationTokenSource _cancellationTokenSource;
+        private Stopwatch _stopwatch;
 
         protected virtual async UniTaskVoid Awake()
         {
-            _cancellationTokenSource = new CancellationTokenSource();
+            var bootstrapConfigData = _defaultConfig;
 
-            await PreInit(_cancellationTokenSource.Token);
-
-            for (var index = 0; index < _initializationSteps.Length; index++)
+            foreach (var bootstrapConfig in _configs)
             {
-                var initializationStep = _initializationSteps[index];
-                if (!initializationStep.Enabled) continue;
-                var stopwatch = new Stopwatch();
-                stopwatch.Start();
-                await initializationStep.Data.Run(StepProgress, _cancellationTokenSource.Token);
+                if (bootstrapConfig.BundleId == Application.identifier)
+                {
+                    bootstrapConfigData = bootstrapConfig.Config;
+                    break;
+                }
+            }
+            
+            if (bootstrapConfigData == null)
+            {
+                Debug.LogError("[BOOT] - Bootstrap Config not found");
+                return;
+            }
+            
+            _cancellationTokenSource = new CancellationTokenSource();
+            _stopwatch = new Stopwatch();
+            _stopwatch.Reset();
+            _stopwatch.Start();
+
+          
+            await PreInit(_cancellationTokenSource.Token, _stopwatch.ElapsedMilliseconds);
+
+            var stopwatch = new Stopwatch();
+            
+            for (var index = 0; index < bootstrapConfigData.Steps.Length; index++)
+            {
+                var initializationStep = bootstrapConfigData.Steps[index];
+                if (initializationStep.Data == null) continue;
+                if (initializationStep.Enabled == false) continue;
+                stopwatch.Restart();
+                await initializationStep.Data.Run(StepProgress, _cancellationTokenSource.Token, _stopwatch.ElapsedMilliseconds);
                 stopwatch.Stop();
                 var elapsedTime = stopwatch.ElapsedMilliseconds;
-                var progress = Mathf.InverseLerp(0, _initializationSteps.Length, index);
+                var progress = Mathf.InverseLerp(0, bootstrapConfigData.Steps.Length, index);
                 Progress.Invoke(progress, elapsedTime);
-                UnityEngine.Debug.LogFormat("Bootstrap - {0:D8} - {1}", elapsedTime, initializationStep.Name);
+                Debug.LogFormat("[BOOT] - {0:D8} - {1}", elapsedTime, initializationStep.Name);
             }
 
-            await Init(_cancellationTokenSource.Token);
+            _stopwatch.Stop();
+
+            await Init(_cancellationTokenSource.Token, _stopwatch.ElapsedMilliseconds);
         }
 
-        protected abstract UniTask PreInit(CancellationToken cancellationToken);
-        protected abstract UniTask Init(CancellationToken cancellationToken);
+        protected abstract UniTask PreInit(CancellationToken cancellationToken, long elapsedMilliseconds);
+        protected abstract UniTask Init(CancellationToken cancellationToken, long elapsedMilliseconds);
         protected abstract void Dispose();
 
         protected virtual void OnDestroy()
         {
+            _stopwatch.Stop();
+            _stopwatch = null;
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource.Dispose();
             _cancellationTokenSource = null;
