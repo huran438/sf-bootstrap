@@ -13,6 +13,9 @@ namespace SFramework.Bootstrap.Runtime
         protected event Action<float, string> StepProgress = (_, _) => { };
 
         [SerializeField]
+        private bool _editorDefaultOnlyMode;
+        
+        [SerializeField]
         private SFBootstrapConfigData _defaultConfig;
 
         [SerializeField]
@@ -25,12 +28,15 @@ namespace SFramework.Bootstrap.Runtime
         {
             var bootstrapConfigData = _defaultConfig;
 
-            foreach (var bootstrapConfig in _configs)
+            if ((_editorDefaultOnlyMode && Application.isEditor) == false)
             {
-                if (bootstrapConfig.BundleId == Application.identifier)
+                foreach (var bootstrapConfig in _configs)
                 {
-                    bootstrapConfigData = bootstrapConfig.Config;
-                    break;
+                    if (bootstrapConfig.BundleId == Application.identifier)
+                    {
+                        bootstrapConfigData = bootstrapConfig.Config;
+                        break;
+                    }
                 }
             }
             
