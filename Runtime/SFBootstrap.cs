@@ -11,13 +11,7 @@ namespace SFramework.Bootstrap.Runtime
     {
         protected event Action<float, long> Progress = (_, _) => { };
         protected event Action<float, string> StepProgress = (_, _) => { };
-
-        [SerializeField]
-        private bool _editorDefaultOnlyMode;
         
-        [SerializeField]
-        private SFBootstrapConfigData _defaultConfig;
-
         [SerializeField]
         private SFBootstrapConfig[] _configs = Array.Empty<SFBootstrapConfig>();
         
@@ -26,18 +20,13 @@ namespace SFramework.Bootstrap.Runtime
 
         protected virtual async UniTaskVoid Awake()
         {
-            var bootstrapConfigData = _defaultConfig;
+            SFBootstrapConfigData bootstrapConfigData = null;
 
-            if ((_editorDefaultOnlyMode && Application.isEditor) == false)
+            foreach (var bootstrapConfig in _configs)
             {
-                foreach (var bootstrapConfig in _configs)
-                {
-                    if (bootstrapConfig.BundleId == Application.identifier)
-                    {
-                        bootstrapConfigData = bootstrapConfig.Config;
-                        break;
-                    }
-                }
+                if (bootstrapConfig.BundleId != Application.identifier) continue;
+                bootstrapConfigData = bootstrapConfig.Data;
+                break;
             }
             
             if (bootstrapConfigData == null)
@@ -45,6 +34,8 @@ namespace SFramework.Bootstrap.Runtime
                 Debug.LogError("[BOOT] - Bootstrap Config not found");
                 return;
             }
+            
+            Debug.LogFormat("[BOOT] - Config: {0}", bootstrapConfigData.Name);
             
             _cancellationTokenSource = new CancellationTokenSource();
             _stopwatch = new Stopwatch();
