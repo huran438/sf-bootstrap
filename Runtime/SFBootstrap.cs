@@ -11,6 +11,9 @@ namespace SFramework.Bootstrap.Runtime
     {
         protected event Action<float, long> Progress = (_, _) => { };
         protected event Action<float, string> StepProgress = (_, _) => { };
+
+        [SerializeField]
+        private SFBootstrapConfigData _fallback;
         
         [SerializeField]
         private SFBootstrapConfig[] _configs = Array.Empty<SFBootstrapConfig>();
@@ -20,11 +23,11 @@ namespace SFramework.Bootstrap.Runtime
 
         protected virtual async UniTaskVoid Awake()
         {
-            SFBootstrapConfigData bootstrapConfigData = null;
+            SFBootstrapConfigData bootstrapConfigData = _fallback;
 
             foreach (var bootstrapConfig in _configs)
             {
-                if (bootstrapConfig.BundleId != Application.identifier) continue;
+                if (Application.isMobilePlatform && bootstrapConfig.BundleId != Application.identifier) continue;
                 bootstrapConfigData = bootstrapConfig.Data;
                 break;
             }
