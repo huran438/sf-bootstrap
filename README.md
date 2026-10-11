@@ -2,8 +2,6 @@
 
 # SF Bootstrap
 
-[Documentation website](https://docs.secretplace.studio/#sf-bootstrap)
-
 ![Package](https://img.shields.io/badge/UPM-sp.sframework.bootstrap-5865f2) ![Version](https://img.shields.io/badge/version-1.0.0-5865f2)
 
 SF Bootstrap runs an ordered list of asynchronous startup steps stored in Unity ScriptableObject assets. Use it when a project needs configurable startup sequences, per-platform configuration, step messages, and elapsed-time reporting.
